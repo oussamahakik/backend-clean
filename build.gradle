@@ -1,0 +1,58 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.7'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'caisse.manager'
+version = '0.0.1-SNAPSHOT'
+description = 'ce projet consiste à implementer un logiciel de la gestion de la caisse pour les snacks'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// Dépendances Spring Boot
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// Driver de la base de données (MariaDB)
+	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+	// Outils de développement
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// Dépendances de Test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	
+	// Base de données H2 pour les tests
+	testImplementation 'com.h2database:h2'
+
+	// 1. Le module de sécurité officiel de Spring
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// 2. Librairies pour générer/lire les Tokens JWT (JJWT)
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
