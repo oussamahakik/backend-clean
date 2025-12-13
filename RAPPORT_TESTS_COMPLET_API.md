@@ -306,3 +306,4 @@ cd "C:\Users\pc\OneDrive - UMONS\Bureau\caisse\caisse"
 **Tests réussis :** 32 (89%)  
 **Tests critiques réussis :** 100%
 
+ 

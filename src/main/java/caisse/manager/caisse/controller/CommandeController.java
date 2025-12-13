@@ -10,6 +10,7 @@ import caisse.manager.caisse.model.Utilisateur;
 import caisse.manager.caisse.repository.CommandeRepository;
 import caisse.manager.caisse.repository.ProduitRepository;
 import caisse.manager.caisse.repository.UtilisateurRepository;
+import caisse.manager.caisse.service.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,9 @@ public class CommandeController {
     
     @Autowired
     private UtilisateurRepository utilisateurRepository;
+
+    @Autowired
+    private PromotionService promotionService;
 
     // 1. CRÉER UNE COMMANDE
     @PostMapping
@@ -85,16 +89,19 @@ public class CommandeController {
             ligne.setQuantite(ligneReq.getQuantite());
             ligne.setDetails(ligneReq.getDetails());
 
-            // --- MODIFICATION ICI ---
-            // Si le frontend envoie un prix spécifique (ex: avec supplément), on l'utilise.
-            // Sinon, on prend le prix de base.
-            double prixUnitaire = (ligneReq.getPrixFinal() != null) ? ligneReq.getPrixFinal() : produit.getPrix();
-
-            ligne.setPrixUnitaire(prixUnitaire);
+            // --- CALCUL DU PRIX AVEC PROMOTION AUTOMATIQUE ---
+            // 1. Si le frontend envoie un prix spécifique (ex: avec supplément), on l'utilise comme base
+            // 2. Sinon, on prend le prix de base du produit
+            double prixDeBase = (ligneReq.getPrixFinal() != null) ? ligneReq.getPrixFinal() : produit.getPrix();
+            
+            // 3. APPLIQUER AUTOMATIQUEMENT LA PROMOTION (si une promotion active existe pour cette catégorie ou ce produit)
+            double prixAvecPromotion = promotionService.appliquerPromotionAutomatique(produit, snackId, prixDeBase);
+            
+            ligne.setPrixUnitaire(prixAvecPromotion);
             ligne.setCommande(nouvelleCommande);
             nouvelleCommande.getLignes().add(ligne);
 
-            totalCalcule += (prixUnitaire * ligneReq.getQuantite());
+            totalCalcule += (prixAvecPromotion * ligneReq.getQuantite());
         }
 
         // Appliquer la remise si présente

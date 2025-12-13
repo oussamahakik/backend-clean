@@ -15,42 +15,44 @@ public class Promotion {
     private Long id;
     
     @Column(nullable = false)
-    private String nom; // Ex: "Réduction été 2024"
+    private String nom; 
     
     @Column(length = 1000)
     private String description;
     
-    @Column(nullable = false)
+    // CORRECTION : On force le nom en snake_case pour éviter le bug "Field doesn't have default value"
+    @Column(name = "type_promotion", nullable = false)
     private String typePromotion; // POURCENTAGE, MONTANT_FIXE, CODE_PROMO
     
     @Column(nullable = false)
-    private Double valeur; // Pourcentage (ex: 20) ou montant fixe (ex: 5.00)
+    private Double valeur; 
     
-    @Column(nullable = false)
+    @Column(name = "date_debut", nullable = false)
     private LocalDate dateDebut;
     
-    @Column(nullable = false)
+    @Column(name = "date_fin", nullable = false)
     private LocalDate dateFin;
     
-    private String codePromo; // Pour les promotions avec code
+    @Column(name = "code_promo")
+    private String codePromo; 
     
     @Column(nullable = false)
     private Boolean actif = true;
     
-    // Si null, promotion globale. Sinon, promotion sur un produit spécifique
+    @Column(name = "produit_id")
     private Long produitId;
     
-    // Si null, promotion globale. Sinon, promotion sur une catégorie
-    private String categorie; // Ex: "BURGER", "TACOS", "BOISSON"
+    private String categorie; 
     
-    @Column(nullable = false)
-    private Long snackId; // Restaurant concerné
+    @Column(name = "snack_id", nullable = false)
+    private Long snackId; 
     
+    @Column(name = "date_creation")
     private LocalDateTime dateCreation = LocalDateTime.now();
     
-    private Integer nombreUtilisations = 0; // Compteur d'utilisations
+    @Column(name = "nombre_utilisations")
+    private Integer nombreUtilisations = 0; 
     
-    private Integer nombreUtilisationsMax; // Limite d'utilisations (null = illimité)
+    @Column(name = "nombre_utilisations_max")
+    private Integer nombreUtilisationsMax; 
 }
-
-

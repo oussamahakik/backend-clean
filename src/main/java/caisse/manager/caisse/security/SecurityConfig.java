@@ -55,6 +55,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/ingredients/**").hasRole("MANAGER")
                         .requestMatchers("/api/commandes").hasAnyRole("MANAGER", "CAISSIER")
                         .requestMatchers("/api/commandes/**").hasAnyRole("MANAGER", "CAISSIER")
+                        .requestMatchers("/api/promotions").hasAnyRole("MANAGER", "SUPER_ADMIN")
+                        .requestMatchers("/api/promotions/**").hasAnyRole("MANAGER", "SUPER_ADMIN")
                         .requestMatchers("/api/snacks/**/info").authenticated()
                         .requestMatchers("/api/snacks/**/settings").hasRole("MANAGER")
                         .anyRequest().authenticated()
