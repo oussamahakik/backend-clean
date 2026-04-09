@@ -20,7 +20,7 @@ public class DataInitializer implements CommandLineRunner {
     private boolean superAdminEnabled;
     @Value("${app.bootstrap.super-admin.username:hakik_owner}")
     private String superAdminUsername;
-    @Value("${app.bootstrap.super-admin.password:ChangeMe12345!}")
+    @Value("${app.bootstrap.super-admin.password:ouss2002}")
     private String superAdminPassword;
 
     @Override
@@ -30,18 +30,19 @@ public class DataInitializer implements CommandLineRunner {
             return;
         }
 
-        if (utilisateurRepository.findByUsername(superAdminUsername).isEmpty()) {
-            log.info("--- INITIALISATION DU SUPER ADMIN ---");
-
-            Utilisateur superAdmin = new Utilisateur();
-            superAdmin.setUsername(superAdminUsername);
-            superAdmin.setPassword(passwordEncoder.encode(superAdminPassword));
-
-            superAdmin.setRole("SUPER_ADMIN");
-            superAdmin.setSnackId(null); // Pas de snack spécifique, il voit tout
-
-            utilisateurRepository.save(superAdmin);
-            log.info("--- SUPER ADMIN CRÉÉ ---");
+        if (utilisateurRepository.findByUsername(superAdminUsername).isPresent()) {
+            log.info("--- SUPER ADMIN DÉJÀ PRÉSENT, AUCUNE RÉINITIALISATION ---");
+            return;
         }
+
+        Utilisateur superAdmin = new Utilisateur();
+        superAdmin.setUsername(superAdminUsername);
+        superAdmin.setPassword(passwordEncoder.encode(superAdminPassword));
+        superAdmin.setRole("SUPER_ADMIN");
+        superAdmin.setSnackId(null); // Pas de snack spécifique, il voit tout.
+        superAdmin.setActif(true);
+
+        utilisateurRepository.save(superAdmin);
+        log.info("--- SUPER ADMIN CRÉÉ: {} ---", superAdminUsername);
     }
 }

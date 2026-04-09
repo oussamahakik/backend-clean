@@ -47,7 +47,13 @@ public class RapportService {
     
     private List<VenteDetailDTO> calculerVentesDetail(Long snackId) {
         LocalDate aujourdhui = LocalDate.now();
-        List<Commande> commandesDuJour = commandeRepository.findBySnackIdAndDate(snackId, aujourdhui);
+        LocalDateTime startOfDay = aujourdhui.atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+        List<Commande> commandesDuJour = commandeRepository.findBySnackIdAndDateBetweenOrderByDateDesc(
+                snackId,
+                startOfDay,
+                endOfDay
+        );
         
         return commandesDuJour.stream()
             .flatMap(commande -> commande.getLignes().stream()
@@ -176,4 +182,3 @@ public class RapportService {
         return "Autres";
     }
 }
-

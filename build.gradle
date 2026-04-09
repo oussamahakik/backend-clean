@@ -9,8 +9,8 @@ version = '0.0.1-SNAPSHOT'
 description = 'ce projet consiste à implementer un logiciel de la gestion de la caisse pour les snacks'
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
 }
 
 configurations {

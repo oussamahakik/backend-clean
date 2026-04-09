@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Arrays;
 
 @RestController
 @RequestMapping("/api/commandes")
@@ -130,8 +131,15 @@ public class CommandeController {
         if (date == null) {
             date = java.time.LocalDate.now();
         }
+        java.time.LocalDateTime startOfDay = date.atStartOfDay();
+        java.time.LocalDateTime endOfDay = startOfDay.plusDays(1);
         // Retourner commandes avec statut PRETE ou SERVIE pour la date spécifiée
-        return commandeRepository.findBySnackIdAndStatutAndDate(snackId, date);
+        return commandeRepository.findBySnackIdAndStatutInAndDateBetweenOrderByDateDesc(
+                snackId,
+                Arrays.asList(StatutCommande.PRETE, StatutCommande.SERVIE),
+                startOfDay,
+                endOfDay
+        );
     }
 
     // 4. CHANGER STATUT
