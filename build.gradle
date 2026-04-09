@@ -9,9 +9,8 @@ version = '0.0.1-SNAPSHOT'
 description = 'ce projet consiste à implementer un logiciel de la gestion de la caisse pour les snacks'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 configurations {
@@ -31,6 +30,7 @@ dependencies {
 
 	// Driver de la base de données (MariaDB)
 	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+	runtimeOnly 'com.h2database:h2'
 
 	// Outils de développement
 	compileOnly 'org.projectlombok:lombok'
@@ -55,4 +55,8 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.release = 21
 }

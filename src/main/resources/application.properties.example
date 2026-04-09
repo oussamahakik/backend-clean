@@ -1,39 +1,20 @@
-## 1. CONFIGURATION DU SERVEUR WEB
-# Nous changeons le port pour 8081 pour éviter le conflit "Port already in use"
+## Exemple de configuration pour MariaDB
+## Copier ces variables dans votre environnement ou dans un fichier externe non versionne.
+
 server.port=8081
 
-## 2. CONFIGURATION DE LA SOURCE DE DONNÉES (AlwaysData - MariaDB)
-# -------------------------------------------------------------------------
-
-# --- CORRECTION URL ---
-# Nous utilisons "jdbc:mariadb://" au lieu de "jdbc:mysql://"
-# car nous utilisons le driver MariaDB (org.mariadb.jdbc.Driver)
-spring.datasource.url=jdbc:mariadb://VOTRE_HOST:3306/VOTRE_DATABASE?requireSSL=false&verifyServerCertificate=false&serverTimezone=UTC
-
-# Identifiants
-spring.datasource.username=VOTRE_USERNAME
-spring.datasource.password=VOTRE_PASSWORD
-
-# Driver (Correct)
+spring.datasource.url=jdbc:mariadb://localhost:3306/caisse?serverTimezone=UTC
+spring.datasource.username=CHANGE_ME
+spring.datasource.password=CHANGE_ME
 spring.datasource.driver-class-name=org.mariadb.jdbc.Driver
 
-## 3. CONFIGURATION JPA / HIBERNATE
-# -------------------------------------------------------------------------
-# Le dialecte MariaDB est plus précis
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MariaDBDialect
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.properties.hibernate.format_sql=true
-spring.jpa.properties.hibernate.use_sql_comments=true
 spring.jpa.show-sql=true
-# Désactiver la création automatique des contraintes FK pour éviter les erreurs "Foreign key constraint is incorrectly formed"
-spring.jpa.properties.hibernate.hbm2ddl.auto=update
-spring.jpa.properties.hibernate.schema_update.unique_constraint_strategy=skip
 
-## 4. CONFIGURATION CORS (Pour le Frontend React)
-# -------------------------------------------------------------------------
-# Note: React devra maintenant appeler http://localhost:8081
-spring.web.cors.allowed-origins=http://localhost:3000, http://127.0.0.1:3000
-spring.web.cors.allowed-methods=GET, POST, PUT, DELETE, OPTIONS
-spring.web.cors.allowed-headers=*
-spring.web.cors.allow-credentials=true
+spring.web.cors.allowed-origins=http://localhost:3000
 
+app.security.jwt-secret=CHANGE_ME_WITH_AT_LEAST_32_CHARACTERS
+app.bootstrap.super-admin.username=admin
+app.bootstrap.super-admin.password=CHANGE_ME
+app.bootstrap.super-admin.enabled=true
