@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.7'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
 }
 
 group = 'caisse.manager'
@@ -39,9 +40,13 @@ dependencies {
 	// Dépendances de Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'org.junit.platform:junit-platform-suite'
 	
 	// Base de données H2 pour les tests
 	testImplementation 'com.h2database:h2'
+	testImplementation 'io.cucumber:cucumber-java:7.20.1'
+	testImplementation 'io.cucumber:cucumber-spring:7.20.1'
+	testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.20.1'
 
 	// 1. Le module de sécurité officiel de Spring
 	implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -55,8 +60,26 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy tasks.named('jacocoTestReport')
+	jacoco {
+		// Évite l'instrumentation des classes JDK (problème avec JVM modernes, ex Java 25)
+		excludes = ['java.*', 'javax.*', 'jdk.*', 'sun.*', 'com.sun.*']
+	}
 }
 
 tasks.withType(JavaCompile).configureEach {
 	options.release = 21
+}
+
+jacoco {
+	toolVersion = '0.8.12'
+}
+
+tasks.named('jacocoTestReport') {
+	dependsOn tasks.named('test')
+	reports {
+		xml.required = true
+		csv.required = false
+		html.required = true
+	}
 }
