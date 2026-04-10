@@ -18,11 +18,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Arrays;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/commandes")
@@ -126,13 +128,13 @@ public class CommandeController {
     @PreAuthorize("hasAnyRole('MANAGER', 'ROLE_MANAGER')")
     public List<Commande> getCommandesHistorique(
             @RequestHeader("X-Snack-ID") Long snackId,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate date) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         // Si date == null, utiliser aujourd'hui
         if (date == null) {
-            date = java.time.LocalDate.now();
+            date = LocalDate.now();
         }
-        java.time.LocalDateTime startOfDay = date.atStartOfDay();
-        java.time.LocalDateTime endOfDay = startOfDay.plusDays(1);
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
         // Retourner commandes avec statut PRETE ou SERVIE pour la date spécifiée
         return commandeRepository.findBySnackIdAndStatutInAndDateBetweenOrderByDateDesc(
                 snackId,
