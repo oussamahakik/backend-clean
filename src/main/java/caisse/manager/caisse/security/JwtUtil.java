@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +22,9 @@ public class JwtUtil {
     private final Key secretKey;
 
     public JwtUtil(@Value("${app.security.jwt-secret}") String secret) {
+        if (!StringUtils.hasText(secret) || secret.length() < 32) {
+            throw new IllegalStateException("app.security.jwt-secret doit etre defini avec au moins 32 caracteres");
+        }
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

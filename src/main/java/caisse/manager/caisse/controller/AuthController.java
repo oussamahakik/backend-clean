@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin("*") // Décommenter si vous avez des soucis CORS en local malgré la config
 public class AuthController {
 
     @Autowired
@@ -50,12 +49,11 @@ public class AuthController {
 
         Utilisateur utilisateur = utilisateurRepository.findByUsername(authRequest.getUsername()).get();
 
-// 👇 ENVOYEZ-VOUS BIEN utilisateur.getRole() À LA FIN ?
         return ResponseEntity.ok(new AuthResponse(
                 jwt,
                 utilisateur.getUsername(),
                 utilisateur.getSnackId(),
-                utilisateur.getRole() // <--- VÉRIFIEZ CETTE LIGNE
+                utilisateur.getRole()
         ));
     }
 

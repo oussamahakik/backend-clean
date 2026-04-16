@@ -1,6 +1,7 @@
 package caisse.manager.caisse.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,8 +20,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -30,6 +34,8 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final MyUserDetailsService myUserDetailsService;
+    @Value("${app.security.cors.allowed-origins:http://localhost:3000}")
+    private String corsAllowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -93,16 +99,27 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000")); 
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization", "Content-Type", "X-Requested-With", "X-Snack-ID", "Accept", "Origin", 
-            "Access-Control-Request-Method", "Access-Control-Request-Headers"
-        ));
+
+        // 1. L'URL exacte de ton frontend sur Render (en dur, sans le slash à la fin)
+        configuration.setAllowedOrigins(Arrays.asList("https://caisse-manager-ui.onrender.com"));
+
+        // 2. On autorise toutes les méthodes classiques
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+
+        // 3. On autorise absolument tous les headers (avec "*") pour éviter les blocages de pré-vérification
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+
+        // 4. On autorise l'envoi des credentials (cookies, headers d'auth)
         configuration.setAllowCredentials(true);
+
+        // 5. On expose le header Authorization pour que ton frontend Vue.js puisse lire le token JWT
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
+
+        // 6. TRÈS IMPORTANT : On applique ça sur "/**" (absolument tout le projet) et non plus juste "/api/**"
+        source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 }
