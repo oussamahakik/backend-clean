@@ -15,19 +15,21 @@ public class Plan {
     @Column(nullable = false, unique = true)
     private String nom; // Ex: "Basic", "Premium", "Enterprise"
 
-    @Column(name = "prixMensuel", nullable = false)
+    // Nettoyé : Spring va automatiquement créer et mapper vers "prix_mensuel"
+    @Column(nullable = false)
     private Double prixMensuel;
-    
+
     @Column(length = 1000)
     private String description;
-    
-    @Column(name = "nombre_restaurants_max")
+
+    // Nettoyé : Spring va automatiquement créer et mapper vers "nombre_restaurants_max"
+    @Column
     private Integer nombreRestaurantsMax; // null = illimité
-    
-    @Column(name = "nombre_utilisateurs_max")
+
+    // Nettoyé : Spring va automatiquement créer et mapper vers "nombre_utilisateurs_max"
+    @Column
     private Integer nombreUtilisateursMax; // null = illimité
-    
+
     @Column(nullable = false)
     private Boolean actif = true;
 }
-
