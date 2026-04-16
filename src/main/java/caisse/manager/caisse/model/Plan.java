@@ -15,7 +15,7 @@ public class Plan {
     @Column(nullable = false, unique = true)
     private String nom; // Ex: "Basic", "Premium", "Enterprise"
 
-    @Column(nullable = false)
+    @Column(name = "prixMensuel", nullable = false)
     private Double prixMensuel;
     
     @Column(length = 1000)
