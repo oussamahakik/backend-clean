@@ -4,6 +4,7 @@ import caisse.manager.caisse.dto.PlanDTO;
 import caisse.manager.caisse.model.Plan;
 import caisse.manager.caisse.repository.PlanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,7 +31,7 @@ public class PlanController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Erreur lors de la récupération des plans", 
+                    .body(Map.of("error", "Erreur lors de la récupération des plans",
                             "message", e.getMessage() != null ? e.getMessage() : "Erreur inconnue"));
         }
     }
@@ -39,15 +40,7 @@ public class PlanController {
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> createPlan(@RequestBody PlanDTO dto) {
         try {
-            // Validation
-            if (dto.getNom() == null || dto.getNom().trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Le nom du plan est requis"));
-            }
-            if (dto.getPrixMensuel() == null || dto.getPrixMensuel() < 0) {
-                return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Le prix mensuel doit être positif"));
-            }
+            validatePlanDto(dto, true);
 
             Plan plan = new Plan();
             plan.setNom(dto.getNom().trim());
@@ -56,13 +49,17 @@ public class PlanController {
             plan.setNombreRestaurantsMax(dto.getNombreRestaurantsMax());
             plan.setNombreUtilisateursMax(dto.getNombreUtilisateursMax());
             plan.setActif(dto.getActif() != null ? dto.getActif() : true);
-            
+
             plan = planRepository.save(plan);
             return ResponseEntity.ok(plan);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Un plan avec ce nom existe déjà"));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Erreur lors de la création du plan", 
+                    .body(Map.of("error", "Erreur lors de la création du plan",
                             "message", e.getMessage() != null ? e.getMessage() : "Erreur inconnue"));
         }
     }
@@ -75,20 +72,26 @@ public class PlanController {
             if (planOpt.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            
+
+            validatePlanDto(dto, false);
+
             Plan plan = planOpt.get();
-            if (dto.getNom() != null) plan.setNom(dto.getNom());
+            if (dto.getNom() != null) plan.setNom(dto.getNom().trim());
             if (dto.getPrixMensuel() != null) plan.setPrixMensuel(dto.getPrixMensuel());
             if (dto.getDescription() != null) plan.setDescription(dto.getDescription());
             if (dto.getNombreRestaurantsMax() != null) plan.setNombreRestaurantsMax(dto.getNombreRestaurantsMax());
             if (dto.getNombreUtilisateursMax() != null) plan.setNombreUtilisateursMax(dto.getNombreUtilisateursMax());
             if (dto.getActif() != null) plan.setActif(dto.getActif());
-            
+
             plan = planRepository.save(plan);
             return ResponseEntity.ok(plan);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Un plan avec ce nom existe déjà"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Erreur lors de la mise à jour du plan: " + e.getMessage());
+                    .body("Erreur lors de la mise à jour du plan: " + e.getMessage());
         }
     }
 
@@ -103,8 +106,28 @@ public class PlanController {
             return ResponseEntity.ok("Plan supprimé avec succès");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Erreur lors de la suppression du plan: " + e.getMessage());
+                    .body("Erreur lors de la suppression du plan: " + e.getMessage());
+        }
+    }
+
+    private void validatePlanDto(PlanDTO dto, boolean creating) {
+        if (creating && (dto.getNom() == null || dto.getNom().trim().isEmpty())) {
+            throw new IllegalArgumentException("Le nom du plan est requis");
+        }
+        if (dto.getNom() != null && dto.getNom().trim().isEmpty()) {
+            throw new IllegalArgumentException("Le nom du plan est invalide");
+        }
+        if (creating && dto.getPrixMensuel() == null) {
+            throw new IllegalArgumentException("Le prix mensuel est requis");
+        }
+        if (dto.getPrixMensuel() != null && dto.getPrixMensuel() < 0) {
+            throw new IllegalArgumentException("Le prix mensuel doit être positif");
+        }
+        if (dto.getNombreRestaurantsMax() != null && dto.getNombreRestaurantsMax() < 1) {
+            throw new IllegalArgumentException("Le nombre maximum de restaurants doit être >= 1");
+        }
+        if (dto.getNombreUtilisateursMax() != null && dto.getNombreUtilisateursMax() < 1) {
+            throw new IllegalArgumentException("Le nombre maximum d'utilisateurs doit être >= 1");
         }
     }
 }
-

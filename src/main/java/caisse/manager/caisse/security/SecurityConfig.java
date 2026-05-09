@@ -1,6 +1,7 @@
 package caisse.manager.caisse.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,41 +32,48 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final MyUserDetailsService myUserDetailsService;
 
+    @Value("${app.security.cors.allowed-origins:http://localhost:3000}")
+    private String corsAllowedOrigins;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Désactiver CSRF (inutile avec JWT)
                 .csrf(csrf -> csrf.disable())
-                // Activer CORS (important pour React)
+
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // GESTION DES ACCÈS
                 .authorizeHttpRequests(auth -> auth
-                        // Autoriser les requêtes Pre-flight CORS (OPTIONS) pour éviter l'erreur PatternParseException
                         .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
 
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/auth/login").permitAll() // Double vérification pour être sûr
+                        .requestMatchers("/api/auth/login").permitAll()
+
                         .requestMatchers("/api/super-admin/**").hasAuthority("ROLE_SUPER_ADMIN")
-                        .requestMatchers("/api/diagnostic/**").hasAuthority("ROLE_SUPER_ADMIN") // Endpoints de diagnostic
+                        .requestMatchers("/api/diagnostic/**").hasAuthority("ROLE_SUPER_ADMIN")
+
                         .requestMatchers("/api/utilisateurs/**").hasRole("MANAGER")
                         .requestMatchers("/api/rapports/**").hasRole("MANAGER")
+
                         .requestMatchers("/api/produits").hasAnyRole("MANAGER", "CAISSIER")
                         .requestMatchers("/api/produits/**").hasRole("MANAGER")
+
                         .requestMatchers("/api/ingredients/**").hasRole("MANAGER")
+
                         .requestMatchers("/api/commandes").hasAnyRole("MANAGER", "CAISSIER")
                         .requestMatchers("/api/commandes/**").hasAnyRole("MANAGER", "CAISSIER")
+
                         .requestMatchers("/api/promotions").hasAnyRole("MANAGER", "SUPER_ADMIN")
                         .requestMatchers("/api/promotions/**").hasAnyRole("MANAGER", "SUPER_ADMIN")
+
                         .requestMatchers("/api/snacks/*/info").authenticated()
                         .requestMatchers("/api/snacks/*/settings").hasRole("MANAGER")
+
                         .anyRequest().authenticated()
                 )
 
-                // Pas de session (Stateless) car on utilise des Tokens
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(sess ->
+                        sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // Ajouter notre filtre avant celui par défaut
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -74,35 +82,51 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Le standard pour crypter les mots de passe
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        DaoAuthenticationProvider authProvider =
+                new DaoAuthenticationProvider();
+
         authProvider.setUserDetailsService(myUserDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
+
         return authProvider;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000")); 
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization", "Content-Type", "X-Requested-With", "X-Snack-ID", "Accept", "Origin", 
-            "Access-Control-Request-Method", "Access-Control-Request-Headers"
+
+        // Support Render + localhost:3000
+        configuration.setAllowedOrigins(Arrays.asList(
+                "https://caisse-manager-ui.onrender.com",
+                "http://localhost:3000"
         ));
+
+        configuration.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+        ));
+
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+
         configuration.setAllowCredentials(true);
+
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 }

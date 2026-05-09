@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 @RequiredArgsConstructor
@@ -16,11 +17,11 @@ public class DataInitializer implements CommandLineRunner {
 
     private final UtilisateurRepository utilisateurRepository;
     private final PasswordEncoder passwordEncoder;
-    @Value("${app.bootstrap.super-admin.enabled:true}")
+    @Value("${app.bootstrap.super-admin.enabled:false}")
     private boolean superAdminEnabled;
-    @Value("${app.bootstrap.super-admin.username:hakik_owner}")
+    @Value("${app.bootstrap.super-admin.username:}")
     private String superAdminUsername;
-    @Value("${app.bootstrap.super-admin.password:ouss2002}")
+    @Value("${app.bootstrap.super-admin.password:}")
     private String superAdminPassword;
 
     @Override
@@ -28,6 +29,9 @@ public class DataInitializer implements CommandLineRunner {
         if (!superAdminEnabled) {
             log.info("--- INITIALISATION DU SUPER ADMIN DESACTIVEE ---");
             return;
+        }
+        if (!StringUtils.hasText(superAdminUsername) || !StringUtils.hasText(superAdminPassword)) {
+            throw new IllegalStateException("app.bootstrap.super-admin.username/password doivent etre definis si app.bootstrap.super-admin.enabled=true");
         }
 
         if (utilisateurRepository.findByUsername(superAdminUsername).isPresent()) {

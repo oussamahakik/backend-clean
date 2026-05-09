@@ -37,7 +37,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
           cache: gradle
 
       - name: Validate Gradle Wrapper
@@ -129,6 +129,7 @@ jobs:
               --restart unless-stopped \
               -p 8080:8080 \
               -e APP_SECURITY_JWT_SECRET="${{ secrets.STAGING_JWT_SECRET }}" \
+              -e APP_CORS_ALLOWED_ORIGINS="${{ secrets.STAGING_CORS_ALLOWED_ORIGINS }}" \
               -v "$APP_DIR/data:/app/data" \
               "$IMAGE"
 
@@ -162,5 +163,6 @@ jobs:
               --restart unless-stopped \
               -p 8080:8080 \
               -e APP_SECURITY_JWT_SECRET="${{ secrets.PROD_JWT_SECRET }}" \
+              -e APP_CORS_ALLOWED_ORIGINS="${{ secrets.PROD_CORS_ALLOWED_ORIGINS }}" \
               -v "$APP_DIR/data:/app/data" \
               "$IMAGE"

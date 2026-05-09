@@ -12,9 +12,9 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MariaDBDialect
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 
-spring.web.cors.allowed-origins=http://localhost:3000
+app.security.cors.allowed-origins=https://app.caisse-manager.com,https://admin.caisse-manager.com
 
 app.security.jwt-secret=CHANGE_ME_WITH_AT_LEAST_32_CHARACTERS
-app.bootstrap.super-admin.username=admin
+app.bootstrap.super-admin.username=CHANGE_ME_SUPER_ADMIN_USERNAME
 app.bootstrap.super-admin.password=CHANGE_ME
-app.bootstrap.super-admin.enabled=true
+app.bootstrap.super-admin.enabled=false

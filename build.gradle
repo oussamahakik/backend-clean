@@ -62,17 +62,17 @@ tasks.named('test') {
 	useJUnitPlatform()
 	finalizedBy tasks.named('jacocoTestReport')
 	jacoco {
-		// Évite l'instrumentation des classes JDK (problème avec JVM modernes, ex Java 25)
+		// Évite l'instrumentation des classes JDK
 		excludes = ['java.*', 'javax.*', 'jdk.*', 'sun.*', 'com.sun.*']
 	}
 }
 
 tasks.withType(JavaCompile).configureEach {
-	options.release = 21
+	options.release = 25
 }
 
 jacoco {
-	toolVersion = '0.8.12'
+	toolVersion = '0.8.13'
 }
 
 tasks.named('jacocoTestReport') {
