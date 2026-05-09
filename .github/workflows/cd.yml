@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - dev
+      - deploy
     tags:
       - "v*"
   workflow_dispatch:
