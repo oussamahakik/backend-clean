@@ -47,6 +47,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/kiosk/**").permitAll()
 
                         .requestMatchers("/api/super-admin/**").hasAuthority("ROLE_SUPER_ADMIN")
                         .requestMatchers("/api/diagnostic/**").hasAuthority("ROLE_SUPER_ADMIN")

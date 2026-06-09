@@ -1,6 +1,7 @@
 package caisse.manager.caisse.controller;
 
 import caisse.manager.caisse.dto.CommandeRequest;
+import caisse.manager.caisse.dto.EncaissementCommandeRequest;
 import caisse.manager.caisse.dto.LigneCommandeRequest;
 import caisse.manager.caisse.model.Commande;
 import caisse.manager.caisse.model.LigneCommande;
@@ -25,6 +26,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/commandes")
@@ -42,6 +46,18 @@ public class CommandeController {
 
     @Autowired
     private PromotionService promotionService;
+
+    private boolean hasSnackAccess(Authentication authentication, Long snackId) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+            return false;
+        }
+        Optional<Utilisateur> utilisateurOpt = utilisateurRepository.findByUsername(userDetails.getUsername());
+        if (utilisateurOpt.isEmpty()) {
+            return false;
+        }
+        Utilisateur utilisateur = utilisateurOpt.get();
+        return utilisateur.getSnackId() != null && utilisateur.getSnackId().equals(snackId);
+    }
 
     // 1. CRÉER UNE COMMANDE
     @PostMapping
@@ -114,6 +130,89 @@ public class CommandeController {
         Commande commandeSauvegardee = commandeRepository.save(nouvelleCommande);
 
         return ResponseEntity.ok("Commande #" + commandeSauvegardee.getId() + " enregistrée !");
+    }
+
+    // 1bis. LISTE DES COMMANDES BORNE NON ENCAISSÉES
+    @GetMapping("/kiosk/pending")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CAISSIER')")
+    public ResponseEntity<?> getKioskPendingOrders(
+            @RequestHeader("X-Snack-ID") Long snackId,
+            Authentication authentication) {
+
+        if (!hasSnackAccess(authentication, snackId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Accès refusé : vous n'avez pas accès à ce restaurant");
+        }
+
+        List<Commande> commandes = commandeRepository.findBySnackIdAndTypePaiementAndStatutOrderByDateAsc(
+                snackId,
+                "EN_CAISSE",
+                StatutCommande.EN_ATTENTE
+        );
+
+        List<Map<String, Object>> response = commandes.stream().map(c -> Map.of(
+                "id", c.getId(),
+                "date", c.getDate(),
+                "total", c.getTotal() == null ? 0.0 : c.getTotal(),
+                "remise", c.getRemise() == null ? 0.0 : c.getRemise(),
+                "articlesCount", c.getLignes() == null ? 0 : c.getLignes().size(),
+                "lignes", c.getLignes() == null ? List.of() : c.getLignes().stream().map(l -> Map.of(
+                        "nomProduit", l.getNomProduit(),
+                        "quantite", l.getQuantite(),
+                        "prixUnitaire", l.getPrixUnitaire() == null ? 0.0 : l.getPrixUnitaire(),
+                        "details", l.getDetails() == null ? "" : l.getDetails()
+                )).collect(Collectors.toList())
+        )).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    // 1ter. ENCAISSER UNE COMMANDE BORNE (ESPECES/CARTE)
+    @PutMapping("/{id}/encaisser")
+    @Transactional
+    @PreAuthorize("hasAnyRole('MANAGER', 'CAISSIER')")
+    public ResponseEntity<?> encaisserCommande(
+            @PathVariable Long id,
+            @RequestHeader("X-Snack-ID") Long snackId,
+            @RequestBody EncaissementCommandeRequest request,
+            Authentication authentication) {
+
+        if (!hasSnackAccess(authentication, snackId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Accès refusé : vous n'avez pas accès à ce restaurant");
+        }
+
+        String modePaiement = request.getTypePaiement() == null ? "" : request.getTypePaiement().trim().toUpperCase();
+        if (!modePaiement.equals("ESPECES") && !modePaiement.equals("CARTE")) {
+            return ResponseEntity.badRequest().body("Type de paiement invalide (ESPECES ou CARTE)");
+        }
+
+        Optional<Commande> commandeOpt = commandeRepository.findById(id);
+        if (commandeOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Commande commande = commandeOpt.get();
+        if (!commande.getSnackId().equals(snackId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Commande introuvable pour ce restaurant");
+        }
+
+        if (!"EN_CAISSE".equalsIgnoreCase(commande.getTypePaiement())) {
+            return ResponseEntity.badRequest().body("Cette commande est déjà encaissée");
+        }
+
+        if (commande.getStatut() != StatutCommande.EN_ATTENTE) {
+            return ResponseEntity.badRequest().body("Seules les commandes en attente peuvent être encaissées");
+        }
+
+        commande.setTypePaiement(modePaiement);
+        commandeRepository.save(commande);
+
+        return ResponseEntity.ok(Map.of(
+                "id", commande.getId(),
+                "typePaiement", commande.getTypePaiement(),
+                "message", "Commande encaissée"
+        ));
     }
 
     // 2. COMMANDES ACTIVES (CUISINE)
