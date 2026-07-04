@@ -22,6 +22,8 @@ import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -32,7 +34,7 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final MyUserDetailsService myUserDetailsService;
 
-    @Value("${app.security.cors.allowed-origins:http://localhost:3000}")
+    @Value("${app.security.cors.allowed-origins:https://caisse-manager-ui.onrender.com,http://localhost:3000}")
     private String corsAllowedOrigins;
 
     @Bean
@@ -107,11 +109,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Support Render + localhost:3000
-        configuration.setAllowedOrigins(Arrays.asList(
-                "https://caisse-manager-ui.onrender.com",
-                "http://localhost:3000"
-        ));
+        configuration.setAllowedOrigins(parseAllowedOrigins(corsAllowedOrigins));
 
         configuration.setAllowedMethods(Arrays.asList(
                 "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
@@ -129,5 +127,12 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
+    }
+
+    private List<String> parseAllowedOrigins(String originsConfig) {
+        return Arrays.stream(originsConfig.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .collect(Collectors.toList());
     }
 }

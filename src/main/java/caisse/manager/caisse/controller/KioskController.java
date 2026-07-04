@@ -12,21 +12,18 @@ import caisse.manager.caisse.model.Produit;
 import caisse.manager.caisse.model.Promotion;
 import caisse.manager.caisse.model.Snack;
 import caisse.manager.caisse.model.StatutCommande;
-import caisse.manager.caisse.model.Utilisateur;
 import caisse.manager.caisse.repository.CommandeRepository;
 import caisse.manager.caisse.repository.IngredientRepository;
 import caisse.manager.caisse.repository.ProduitRepository;
 import caisse.manager.caisse.repository.PromotionRepository;
 import caisse.manager.caisse.repository.SnackRepository;
-import caisse.manager.caisse.repository.UtilisateurRepository;
+import caisse.manager.caisse.security.SnackAccessService;
 import caisse.manager.caisse.service.PromotionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -46,12 +43,12 @@ import java.util.stream.Collectors;
 public class KioskController {
 
     private final SnackRepository snackRepository;
-    private final UtilisateurRepository utilisateurRepository;
     private final ProduitRepository produitRepository;
     private final IngredientRepository ingredientRepository;
     private final PromotionRepository promotionRepository;
     private final CommandeRepository commandeRepository;
     private final PromotionService promotionService;
+    private final SnackAccessService snackAccessService;
     private final PasswordEncoder passwordEncoder;
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -315,35 +312,7 @@ public class KioskController {
     }
 
     private boolean hasSnackAccess(Authentication authentication, Long snackId, boolean requireManager) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return false;
-        }
-
-        boolean isSuperAdmin = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(auth -> auth.equals("ROLE_SUPER_ADMIN") || auth.equals("SUPER_ADMIN"));
-        if (isSuperAdmin) {
-            return true;
-        }
-
-        if (requireManager) {
-            boolean isManager = authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .anyMatch(auth -> auth.equals("ROLE_MANAGER") || auth.equals("MANAGER"));
-            if (!isManager) {
-                return false;
-            }
-        }
-
-        if (authentication.getPrincipal() instanceof UserDetails userDetails) {
-            Optional<Utilisateur> utilisateurOpt = utilisateurRepository.findByUsername(userDetails.getUsername());
-            if (utilisateurOpt.isPresent()) {
-                Utilisateur utilisateur = utilisateurOpt.get();
-                return utilisateur.getSnackId() != null && utilisateur.getSnackId().equals(snackId);
-            }
-        }
-
-        return false;
+        return snackAccessService.hasSnackAccess(authentication, snackId, requireManager);
     }
 
     private String normalizeSlug(String slugInput) {
