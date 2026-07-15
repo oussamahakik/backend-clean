@@ -47,6 +47,16 @@ public class Snack {
     
     @Column(name = "notifications_enabled")
     private Boolean notificationsEnabled = true; // Activer les notifications
+
+    // Configuration borne de commande (kiosk)
+    @Column(name = "kiosk_enabled")
+    private Boolean kioskEnabled = false;
+
+    @Column(name = "kiosk_slug", unique = true, length = 80)
+    private String kioskSlug;
+
+    @Column(name = "kiosk_pin_hash", length = 255)
+    private String kioskPinHash;
     
     // Relations bidirectionnelles désactivées pour éviter les problèmes de contraintes FK mal formées
     // Ces relations ne sont pas utilisées dans le code existant qui utilise directement snackId

@@ -3,7 +3,7 @@ package caisse.manager.caisse.service;
 import caisse.manager.caisse.model.Promotion;
 import caisse.manager.caisse.model.Produit;
 import caisse.manager.caisse.repository.PromotionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,10 +14,10 @@ import java.util.Optional;
  * Service pour gérer l'application automatique des promotions
  */
 @Service
+@RequiredArgsConstructor
 public class PromotionService {
 
-    @Autowired
-    private PromotionRepository promotionRepository;
+    private final PromotionRepository promotionRepository;
 
     /**
      * Trouve la promotion active applicable à un produit selon sa catégorie
@@ -32,19 +32,15 @@ public class PromotionService {
             return null;
         }
 
-        LocalDate now = LocalDate.now();
-        String categorie = produit.getCategorie();
-
-        // Chercher les promotions actives pour cette catégorie
+        LocalDate today = LocalDate.now();
         List<Promotion> promotions = promotionRepository
                 .findByCategorieAndSnackIdAndActifTrueAndDateDebutLessThanEqualAndDateFinGreaterThanEqual(
-                        categorie, snackId, now, now);
+                        produit.getCategorie(), snackId, today, today);
 
         if (promotions.isEmpty()) {
             return null;
         }
-        
-        // Retourner la promotion qui donne le meilleur prix (la plus avantageuse pour le client)
+
         return trouverMeilleurePromotion(promotions, prixInitial);
     }
 
@@ -59,19 +55,15 @@ public class PromotionService {
             return null;
         }
 
-        LocalDate now = LocalDate.now();
-
-        // Chercher les promotions actives pour ce produit spécifique
+        LocalDate today = LocalDate.now();
         List<Promotion> promotions = promotionRepository
                 .findByProduitIdAndSnackIdAndActifTrueAndDateDebutLessThanEqualAndDateFinGreaterThanEqual(
-                        produitId, snackId, now, now);
+                        produitId, snackId, today, today);
 
-        // Les dates sont déjà filtrées par le repository
         if (promotions.isEmpty()) {
             return null;
         }
-        
-        // Retourner la première promotion trouvée (qui est déjà active selon le repository)
+
         return promotions.get(0);
     }
 
@@ -95,17 +87,13 @@ public class PromotionService {
 
         switch (typePromotion) {
             case "POURCENTAGE":
-                // Réduction en pourcentage : NouveauPrix = PrixInitial * (1 - valeur/100)
                 return Math.max(0.0, prixInitial * (1 - valeur / 100.0));
 
             case "MONTANT_FIXE":
             case "MONTANT":
-                // Réduction en montant fixe : NouveauPrix = PrixInitial - valeur
                 return Math.max(0.0, prixInitial - valeur);
 
             case "CODE_PROMO":
-                // Les codes promo peuvent avoir différents comportements
-                // Pour l'instant, on traite comme un pourcentage
                 double reductionCode = prixInitial * (valeur / 100.0);
                 return Math.max(0.0, prixInitial - reductionCode);
 
@@ -155,11 +143,11 @@ public class PromotionService {
             return prixInitial;
         }
 
-        // 1. Chercher d'abord une promotion sur le produit spécifique
+        LocalDate today = LocalDate.now();
         List<Promotion> promotionsProduit = promotionRepository
                 .findByProduitIdAndSnackIdAndActifTrueAndDateDebutLessThanEqualAndDateFinGreaterThanEqual(
-                        produit.getId(), snackId, LocalDate.now(), LocalDate.now());
-        
+                        produit.getId(), snackId, today, today);
+
         if (!promotionsProduit.isEmpty()) {
             Promotion meilleurePromoProduit = trouverMeilleurePromotion(promotionsProduit, prixInitial);
             if (meilleurePromoProduit != null) {
@@ -167,14 +155,11 @@ public class PromotionService {
             }
         }
 
-        // 2. Sinon, chercher une promotion sur la catégorie
         Promotion meilleurePromoCategorie = trouverMeilleurePromotionPourProduit(produit, snackId, prixInitial);
         if (meilleurePromoCategorie != null) {
             return calculerPrixAvecPromotion(prixInitial, meilleurePromoCategorie);
         }
 
-        // 3. Aucune promotion trouvée, retourner le prix initial
         return prixInitial;
     }
 }
-

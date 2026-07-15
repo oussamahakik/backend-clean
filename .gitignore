@@ -41,6 +41,9 @@ out/
 src/main/resources/application.properties
 # Garder le fichier exemple pour la documentation
 !src/main/resources/application.properties.example
+.env.local
+.env.*.local
+!.env.local.example
 
 ### Logs ###
 *.log

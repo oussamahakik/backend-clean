@@ -1,0 +1,23 @@
+# Exemple de configuration locale pour ne jamais toucher la base AlwaysData.
+# Utilisation:
+#   1) copier ce fichier en application-local.properties
+#   2) lancer avec --spring.profiles.active=local
+
+server.port=8080
+
+app.security.jwt-secret=CHANGE_ME_WITH_AT_LEAST_32_CHARACTERS
+app.security.cors.allowed-origins=http://localhost:3000
+
+spring.datasource.url=jdbc:h2:file:./data/caisse-db-dev-local;MODE=MariaDB;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect
+spring.jackson.serialization.fail-on-empty-beans=false
+spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+app.bootstrap.super-admin.enabled=true
+app.bootstrap.super-admin.username=oussamalocal
+app.bootstrap.super-admin.password=oussamalocal

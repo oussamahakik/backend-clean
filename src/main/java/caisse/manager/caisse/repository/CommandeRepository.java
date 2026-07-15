@@ -33,6 +33,12 @@ public interface CommandeRepository extends JpaRepository<Commande, Long> {
             LocalDateTime startOfDay,
             LocalDateTime endOfDay
     );
+
+    List<Commande> findBySnackIdAndTypePaiementAndStatutOrderByDateAsc(
+            Long snackId,
+            String typePaiement,
+            StatutCommande statut
+    );
     
     @Query("SELECT COALESCE(SUM(c.total), 0) FROM Commande c WHERE c.snackId = :snackId")
     Double sumChiffreAffairesBySnackId(@Param("snackId") Long snackId);
