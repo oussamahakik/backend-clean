@@ -316,18 +316,45 @@ public class KioskController {
     }
 
     private String normalizeSlug(String slugInput) {
-        String normalized = Normalizer.normalize(slugInput, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "")
-                .toLowerCase()
-                .replaceAll("[^a-z0-9\\-\\s]", "")
-                .trim()
-                .replaceAll("\\s+", "-")
-                .replaceAll("-{2,}", "-");
+        String normalized = Normalizer.normalize(slugInput, Normalizer.Form.NFD);
+        StringBuilder slug = new StringBuilder(normalized.length());
+        boolean lastWasDash = false;
 
-        if (normalized.length() > 64) {
-            return normalized.substring(0, 64).replaceAll("-+$", "");
+        for (int i = 0; i < normalized.length(); i++) {
+            char ch = normalized.charAt(i);
+
+            if (Character.getType(ch) == Character.NON_SPACING_MARK) {
+                continue;
+            }
+
+            char lower = Character.toLowerCase(ch);
+            if (Character.isLetterOrDigit(lower)) {
+                slug.append(lower);
+                lastWasDash = false;
+                continue;
+            }
+
+            if (Character.isWhitespace(lower) || lower == '-') {
+                if (!lastWasDash && slug.length() > 0) {
+                    slug.append('-');
+                    lastWasDash = true;
+                }
+            }
         }
-        return normalized;
+
+        int end = slug.length();
+        while (end > 0 && slug.charAt(end - 1) == '-') {
+            end--;
+        }
+
+        if (end > 64) {
+            end = 64;
+            while (end > 0 && slug.charAt(end - 1) == '-') {
+                end--;
+            }
+        }
+
+        return slug.substring(0, end);
     }
 
     private String buildDefaultSlug(String snackName, Long snackId) {
