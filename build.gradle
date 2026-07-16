@@ -44,17 +44,17 @@ dependencies {
 	
 	// Base de données H2 pour les tests
 	testImplementation 'com.h2database:h2'
-	testImplementation 'io.cucumber:cucumber-java:7.20.1'
-	testImplementation 'io.cucumber:cucumber-spring:7.20.1'
-	testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.20.1'
+	testImplementation 'io.cucumber:cucumber-java:7.34.4'
+	testImplementation 'io.cucumber:cucumber-spring:7.34.4'
+	testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.34.4'
 
 	// 1. Le module de sécurité officiel de Spring
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	// 2. Librairies pour générer/lire les Tokens JWT (JJWT)
-	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 
 }
 
